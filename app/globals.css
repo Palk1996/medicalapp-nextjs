@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+input{
+    padding: 10px;
+    border: 1px solid #c3c3c3;
+    border-radius: 5px;
+}
+
+.search-input{
+    height: 2.5rem;
+    padding: 8px 8px 8px 12px;
+    border: 1px solid #c3c3c3;
+    border-radius: 0px;
+}
+
+.tremor-Button-root:focus{
+    border: none;
+}
+.tremor-dialog-panel{
+    min-width: 50% !important;
+}
+
+.ql-editor{
+    font-size: 18px !important;
+}
+.ui-selected\:text-tremor-brand[data-headlessui-state~="selected"]{
+    color: #00ADB5 !important;
+}
+
+.ui-selected\:border-tremor-brand[data-headlessui-state~="selected"]{
+    border-color: #00ADB5 !important;
+}
