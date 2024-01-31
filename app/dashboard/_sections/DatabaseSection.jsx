@@ -25,7 +25,7 @@ function DatabaseSection() {
     },
     {
       title: "Admin",
-      headers: ["admin_id", "full_name", "username", "password", "email", "telephone", "gender", "birthdate"],
+      headers: ["admin_id", "username", "first_name", "last_name", "password", "email", "telephone", "gender", "birthdate", "role", "status"],
       fetchingPath: "/api/admin",
     },
   ];
@@ -54,7 +54,7 @@ function DatabaseSection() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.5, delay: 0.1, ease: 'easeInOut' }}
-      className='m-6 bg-white'>
+      className='m-6 bg-white w-max'>
       <div className='p-6 flex flex-col'>
         <span className='text-2xl font-bold' style={{ color: theme.primaryColor }}>Database Section</span>
         <TabGroup>

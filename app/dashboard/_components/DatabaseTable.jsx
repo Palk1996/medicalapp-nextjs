@@ -1,14 +1,59 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Title } from "@tremor/react";
 import { Icon } from '@iconify/react';
 import { Skeleton } from '@mui/material';
-import Pagination from '@/app/components/Pagination';
+import {
+    useReactTable,
+    createColumnHelper,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    flexRender,
+    ColumnResizeDirection,
+    ColumnResizeMode,
+    ColumnDef
+} from '@tanstack/react-table';
 
 function DatabaseTable({ title, headers, fetchingPath }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
-    const totalPages = 3;
+    const [globalFilter, setGlobalFilter] = useState("");
+    const columnHelper = createColumnHelper();
+    const [columnResizeMode, setColumnResizeMode] = useState('onChange')
+
+    const [columnResizeDirection, setColumnResizeDirection] = useState('ltr')
+    const columns = headers.map((name, index) => {
+        return {
+            ...columnHelper.accessor(name, {
+                cell: (item) => <span>{item.getValue()}</span>,
+                header: name,
+                size: 200,
+                enableResizing: true,
+                minSize: 50,
+                maxSize: 500
+            }),
+        };
+    });
+    const table = useReactTable({
+        data,
+        columns,
+        state: {
+            globalFilter
+        },
+        getFilteredRowModel: getFilteredRowModel(),
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        columnResizeMode,
+        columnResizeDirection,
+        debugTable: true,
+        debugHeaders: true,
+        debugColumns: true,
+        initialState: {
+            pagination: {
+                pageSize: 8
+            }
+        }
+    });
 
     useEffect(() => {
         const fetchData = () => {
@@ -32,46 +77,158 @@ function DatabaseTable({ title, headers, fetchingPath }) {
         fetchData();
     }, []);
 
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
     return (
-        <Card>
-            <Title className='flex items-center text-lg font-bold'><Icon icon="tabler:table-filled" /> {title} Table</Title>
-            <Table className="mt-5">
-                <TableHead>
-                    <TableRow>
-                        {headers.map((item, index) => (
-                            <TableHeaderCell className='text-md' key={index}>{item}</TableHeaderCell>
-                        ))}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {loading ? (
-                        Array.from({ length: 6}, (_, index) => (
-                            <TableRow key={index} className={` ${index % 2 === 1 ? 'bg-[transparent]' : ' bg-slate-100'} border-none !text-PrimaryColors hover:!text-InactivePrimary cursor-pointer`}>
-                                {headers.map((_, cellIndex) => (
-                                    <TableCell key={cellIndex}>
-                                        <Skeleton animation="wave" />
-                                    </TableCell>
+        <div>
+            <table className="w-full" {...{
+                style: {
+                    width: table.getCenterTotalSize(),
+                },
+            }}>
+                <thead>
+                    {
+                        table.getHeaderGroups().map((headerGroup) => (
+                            <tr key={headerGroup.id}>
+                                {
+                                    headerGroup.headers.map((header) => (
+                                        <th {...{
+                                            key: header.id,
+                                            colSpan: header.colSpan,
+                                            style: {
+                                                width: header.getSize(),
+                                            },
+                                        }}
+                                            className='p-2'
+                                        >
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                            <div
+                                                {...{
+                                                    onDoubleClick: () => header.column.resetSize(),
+                                                    onMouseDown: header.getResizeHandler(),
+                                                    onTouchStart: header.getResizeHandler(),
+                                                    className: `resizer ${table.options.columnResizeDirection
+                                                        } ${header.column.getIsResizing() ? 'isResizing' : ''
+                                                        }`,
+                                                    style: {
+                                                        transform:
+                                                            columnResizeMode === 'onEnd' &&
+                                                                header.column.getIsResizing()
+                                                                ? `translateX(${(table.options.columnResizeDirection ===
+                                                                    'rtl'
+                                                                    ? -1
+                                                                    : 1) *
+                                                                (table.getState().columnSizingInfo
+                                                                    .deltaOffset ?? 0)
+                                                                }px)`
+                                                                : '',
+                                                    },
+                                                }}
+                                            />
+                                        </th>
+                                    ))
+                                }
+                            </tr>
+                        ))
+                    }
+                </thead>
+                <tbody>
+                    {!loading ? (
+                        table.getRowModel().rows.map((row, i) => (
+                            <tr key={row.id} className={`${i % 2 === 0 ? 'bg-[#fff]':'bg-slate-100'} text-sm`}>
+                                {row.getVisibleCells().map(cell => (
+                                    <td
+                                        {...{
+                                            key: cell.id,
+                                            style: {
+                                                width: cell.column.getSize(),
+                                            },
+                                        }}
+                                    >
+                                        {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext()
+                                        )}
+                                    </td>
                                 ))}
-                            </TableRow>
+                            </tr>
                         ))
                     ) : (
-                        // Render the actual data
-                        data.map((rowData, index) => (
-                            <TableRow key={index} className={` ${index % 2 === 1 ? 'bg-[transparent]' : ' bg-slate-100'} border-none !text-PrimaryColors hover:!text-InactivePrimary cursor-pointer`}>
-                                {headers.map((header, cellIndex) => (
-                                    <TableCell key={cellIndex}>{typeof rowData[header] === 'string' && rowData[header].length > 15 ? `${rowData[header].slice(0, 25)}...` : rowData[header]}</TableCell>
+                        table.getRowModel().rows.map((row, i) => (
+                            <tr
+                                key={row.id}
+                                className={`${i % 2 === 0 ? "bg-[#fff]" : "bg-slate-100"}`}
+                            >
+                                {row.getVisibleCells().map((cell) => (
+                                    <td key={cell.id} className="p-2 text-sm">
+                                        <Skeleton animation="wave" height={25} />
+                                    </td>
                                 ))}
-                            </TableRow>
+                            </tr>
                         ))
                     )}
-                </TableBody>
-            </Table>
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-        </Card>
+                    {!loading && table.getRowModel().rows.length === 0 &&
+                        <tr className="text-center h-32">
+                            <td colSpan={12}>No Recoard Found!</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div className="flex items-center justify-end mt-2 gap-2">
+                <button
+                    onClick={() => {
+                        table.previousPage();
+                    }}
+                    disabled={!table.getCanPreviousPage()}
+                    className="p-1 border border-gray-300 px-2 disabled:opacity-30"
+                >
+                    {"<"}
+                </button>
+                <button
+                    onClick={() => {
+                        table.nextPage();
+                    }}
+                    disabled={!table.getCanNextPage()}
+                    className="p-1 border border-gray-300 px-2 disabled:opacity-30"
+                >
+                    {">"}
+                </button>
+
+                <span className="flex items-center gap-1">
+                    <div>Page</div>
+                    <strong>
+                        {table.getState().pagination.pageIndex + 1} of{" "}
+                        {table.getPageCount()}
+                    </strong>
+                </span>
+                <span className="flex items-center gap-1">
+                    | Go to page:
+                    <input
+                        type="number"
+                        defaultValue={table.getState().pagination.pageIndex + 1}
+                        onChange={(e) => {
+                            const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                            table.setPageIndex(page);
+                        }}
+                        className="border p-1 rounded w-16 bg-transparent"
+                    />
+                </span>
+                <select
+                    value={table.getState().pagination.pageSize}
+                    onChange={(e) => {
+                        table.setPageSize(Number(e.target.value));
+                    }}
+                    className="p-2 bg-transparent"
+                >
+                    {[4, 8, 12, 16].map((pageSize) => (
+                        <option key={pageSize} value={pageSize}>
+                            Show {pageSize}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        </div>
     );
 }
 
