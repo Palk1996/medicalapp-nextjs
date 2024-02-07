@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@tremor/react";
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { Icon } from '@iconify/react';
@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 
 function DatabaseSection() {
   const { theme } = useTheme();
+  const [search, setSearch] = useState('');
+  let tabsNumber = 0;
   const databaseHeader = [
     {
       title: "Disease",
@@ -48,27 +50,36 @@ function DatabaseSection() {
       icon: <Icon icon="eos-icons:admin" />
     },
   ];
+
+  const onSearchChange = (e) => {
+    setSearch(e.target.value);
+  }
+
   return (
     <motion.section
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.5, delay: 0.1, ease: 'easeInOut' }}
-      className='m-6 bg-white w-max'>
+      className='m-6 bg-white w-[97%]'>
       <div className='p-6 flex flex-col'>
         <span className='text-2xl font-bold' style={{ color: theme.primaryColor }}>Database Section</span>
-        <TabGroup>
-          <TabList className="mt-8">
-            {tabHeader.map((item, index) => (
-              <Tab className='h-[3rem]' key={index}><div className='text-lg space-x-2 flex flex-row items-center'>{item.icon}<span>{item.label}</span></div></Tab>
-            ))}
-          </TabList>
+        <TabGroup onIndexChange={(index) => tabsNumber = index}>
+          <div className='flex justify-between items-center'>
+            <TabList className="mt-8">
+              {tabHeader.map((item, index) => (
+                <Tab className='h-[3rem]' key={index}><div className='text-lg space-x-2 flex flex-row items-center'>{item.icon}<span>{item.label}</span></div></Tab>
+              ))}
+            </TabList>
+            <input onChange={onSearchChange} type="text" className='mt-8 h-[2rem]'/>
+          </div>
+
           <TabPanels>
             {
               databaseHeader.map((item, index) => (
                 <TabPanel key={index}>
                   <div className="mt-10">
-                    <DatabaseTable {...item} />
+                    <DatabaseTable {...item} search={search} />
                   </div>
                 </TabPanel>
               ))

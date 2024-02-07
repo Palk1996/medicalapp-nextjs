@@ -13,10 +13,10 @@ import {
     ColumnDef
 } from '@tanstack/react-table';
 
-function DatabaseTable({ title, headers, fetchingPath }) {
-    const [currentPage, setCurrentPage] = useState(1);
+function DatabaseTable({ title, headers, fetchingPath, search }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
+    const [dataFromSearch, setDataFromSearch] = useState([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const columnHelper = createColumnHelper();
     const [columnResizeMode, setColumnResizeMode] = useState('onChange')
@@ -25,9 +25,8 @@ function DatabaseTable({ title, headers, fetchingPath }) {
     const columns = headers.map((name, index) => {
         return {
             ...columnHelper.accessor(name, {
-                cell: (item) => <span>{item.getValue()}</span>,
+                cell: (item) => <span>{String(item.getValue()).length > 20 ? String(item.getValue()).slice(0, 20) + '...' : String(item.getValue())}</span>,
                 header: name,
-                size: 200,
                 enableResizing: true,
                 minSize: 50,
                 maxSize: 500
@@ -35,7 +34,7 @@ function DatabaseTable({ title, headers, fetchingPath }) {
         };
     });
     const table = useReactTable({
-        data,
+        data: dataFromSearch ? dataFromSearch : data,
         columns,
         state: {
             globalFilter
@@ -77,8 +76,28 @@ function DatabaseTable({ title, headers, fetchingPath }) {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const fetchData = () => {
+            setTimeout(async () => {
+                try {
+                    const response = await fetch(fetchingPath + `?search=${search}`);
+                    const result = await response.json();
+                    setDataFromSearch(result);
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }, 0);
+            setTimeout(() => { setLoading(false); }, 3000);
+
+        };
+
+        fetchData();
+    }, [search]);
+
+    useEffect(()=>{console.log(dataFromSearch)},[dataFromSearch])
+
     return (
-        <div>
+        <div className='w-full flex flex-col items-center gap-4'>
             <table className="w-full" {...{
                 style: {
                     width: table.getCenterTotalSize(),
@@ -136,7 +155,7 @@ function DatabaseTable({ title, headers, fetchingPath }) {
                 <tbody>
                     {!loading ? (
                         table.getRowModel().rows.map((row, i) => (
-                            <tr key={row.id} className={`${i % 2 === 0 ? 'bg-[#fff]':'bg-slate-100'} text-sm`}>
+                            <tr key={row.id} className={`${i % 2 === 0 ? 'bg-[#fff]' : 'bg-slate-100'} text-sm`}>
                                 {row.getVisibleCells().map(cell => (
                                     <td
                                         {...{
