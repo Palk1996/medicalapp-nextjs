@@ -50,6 +50,9 @@ const UploadForm = (props) => {
             ['code-block'],
             ['clean'],
         ],
+        clipboard: {
+            matchVisual: false
+        }
     };
     const quillFormats = [
         'header',
@@ -145,6 +148,7 @@ const UploadForm = (props) => {
                             placeholder={item.placeholder}
                             modules={quillModules}
                             formats={quillFormats}
+
                         />
                     ) : (
                         <input

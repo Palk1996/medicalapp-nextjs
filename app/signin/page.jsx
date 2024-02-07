@@ -123,9 +123,9 @@ const RegisterForm = (props) => {
     resolver: yupResolver(schema),
   });
   const inputFields = [
+    { name: 'username', type: 'text', placeholder: 'Username' },
     { name: 'firstName', type: 'text', placeholder: 'First Name' },
     { name: 'lastName', type: 'text', placeholder: 'Last Name' },
-    { name: 'username', type: 'text', placeholder: 'Username' },
     { name: 'email', type: 'email', placeholder: 'Email Address' },
     { name: 'password', type: 'password', placeholder: 'Password' },
     { name: 'confirmPassword', type: 'password', placeholder: 'Confirm Password' },

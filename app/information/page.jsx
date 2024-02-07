@@ -16,7 +16,6 @@ import {
     TabPanel,
 } from "@tremor/react";
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 function Information() {
     const [data, setData] = useState([]);
