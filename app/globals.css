@@ -65,17 +65,18 @@ th,
 .th,
 td,
 .td {
-    box-shadow: inset 0 0 0 1px #aaa;
-    padding: 0.25rem;
+    padding: 0.5rem;
+    text-align: center;
 }
 
 th,
 .th {
-    padding: 2px 4px;
+    padding: 0.5rem;
     position: relative;
     font-weight: bold;
     text-align: center;
     height: 30px;
+    @apply bg-slate-100;
 }
 
 
@@ -111,4 +112,12 @@ th,
     *:hover>.resizer {
         opacity: 1;
     }
+}
+
+.modifier{
+    @apply hover:bg-[transparent] border px-[1rem] py-[.35rem] rounded-[5px] text-lg;
+}
+
+.editTitle::first-letter{
+    text-transform:capitalize;
 }

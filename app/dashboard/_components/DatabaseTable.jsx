@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Skeleton } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import TextField from '@mui/material/TextField';
+import { onSweetAlert, onSweetAsking } from '@/app/libs/notifications';
+import Button from '@mui/material/Button'
+import 'react-quill/dist/quill.snow.css';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 import {
     useReactTable,
     createColumnHelper,
@@ -12,6 +22,27 @@ import {
     ColumnResizeMode,
     ColumnDef
 } from '@tanstack/react-table';
+import dynamic from 'next/dynamic';
+const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
+
+function IndeterminateCheckbox({ indeterminate, className = '', ...rest }) {
+    const ref = React.useRef(null);
+
+    React.useEffect(() => {
+        if (typeof indeterminate === 'boolean') {
+            ref.current.indeterminate = !rest.checked && indeterminate;
+        }
+    }, [ref, indeterminate]);
+
+    return (
+        <input
+            type="checkbox"
+            ref={ref}
+            className={className + ' cursor-pointer h-5 w-5 accent-PrimaryColors'}
+            {...rest}
+        />
+    );
+}
 
 function DatabaseTable({ title, headers, fetchingPath, search }) {
     const [loading, setLoading] = useState(true);
@@ -19,20 +50,151 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
     const [dataFromSearch, setDataFromSearch] = useState([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const columnHelper = createColumnHelper();
-    const [columnResizeMode, setColumnResizeMode] = useState('onChange')
+    const [columnResizeMode, setColumnResizeMode] = useState('onChange');
+    const [columnResizeDirection, setColumnResizeDirection] = useState('ltr');
+    const [onDialogOpen, setOnDialogOpen] = useState(false);
+    const [editData, setEditData] = useState([]);
+    const [deleteData, setDeleteData] = useState([]);
+    const quillModules = {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['link', 'image'],
+            [{ align: [] }],
+            [{ color: [] }],
+            ['code-block'],
+            ['clean'],
+        ],
+        clipboard: {
+            matchVisual: false
+        }
+    };
+    const quillFormats = [
+        'header',
+        'bold',
+        'italic',
+        'underline',
+        'strike',
+        'blockquote',
+        'list',
+        'bullet',
+        'link',
+        'image',
+        'align',
+        'color',
+        'code-block',
+    ];
+    const onDialogToggle = () => {
+        setOnDialogOpen(!onDialogOpen);
+        console.log(onDialogOpen);
+    }
 
-    const [columnResizeDirection, setColumnResizeDirection] = useState('ltr')
-    const columns = headers.map((name, index) => {
-        return {
+    const onDataDelete = async (path, id) => {
+        try {
+            console.log(id)
+            if (id) await axios.delete(`/api/${path}?id=${id}`);
+            else throw new Error('params is undefined');
+        } catch (error) {
+            onSweetAlert('Update Error', error.message, 'error');
+        }
+    }
+
+    useEffect(() => {
+        deleteData ? onDataDeleteAlert() : null
+    }, [deleteData])
+
+    const onDataDeleteAlert = async () => {
+        if ( isNaN(deleteData)) {
+            const path = String(Object.keys(deleteData)[0]).split('_')[0] === 'type' ? 'medicine_type' : String(Object.keys(deleteData)[0]).split('_')[0]
+            const id = await deleteData[Object.keys(deleteData)[0]];
+            console.log(id);
+            Swal.fire({
+                title: "Are you sure for deleting ?",
+                showCancelButton: true,
+                confirmButtonText: "Delete",
+                confirmButtonColor: "#c60f31",
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire("Saved!", "", "success");
+                    await onDataDelete(path, id);
+                }
+            });
+        }
+
+
+    }
+
+    const modifierButtons = [
+        {
+            name: 'Edit', icon: <Icon icon="mdi:edit" style={{ color: 'white' }} />, color: 'modifier flex items-center bg-[#ffcc3d] border-[#ffcc3d] hover:border-[#ffcc3d] hover:text-[#ffcc3d]', behavior: onDialogToggle
+        },
+        {
+            name: 'Delete', icon: <Icon icon="mdi:delete" style={{ color: 'white' }} />, color: 'modifier flex items-center bg-[#c60f31] border-[#c60f31] hover: border-[#c60f31] hover:text-[#c60f31]', behavior: () => { }
+        },
+    ];
+    const columns = [
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <IndeterminateCheckbox
+                    {...{
+                        checked: table.getIsAllRowsSelected(),
+                        indeterminate: table.getIsSomeRowsSelected(),
+                        onChange: table.getToggleAllRowsSelectedHandler(),
+                    }}
+                />
+            ),
+            cell: ({ row }) => (
+                <div className="px-1 text-center">
+                    <IndeterminateCheckbox
+                        {...{
+                            checked: row.getIsSelected(),
+                            disabled: !row.getCanSelect(),
+                            indeterminate: row.getIsSomeSelected(),
+                            onChange: row.getToggleSelectedHandler(),
+                        }}
+                    />
+                </div>
+            ),
+        },
+        ...headers.map((name, index) => ({
             ...columnHelper.accessor(name, {
-                cell: (item) => <span>{String(item.getValue()).length > 20 ? String(item.getValue()).slice(0, 20) + '...' : String(item.getValue())}</span>,
+                cell: (item) => (
+                    <span className='text-sm'>
+                        {String(item.getValue()).length > 20 ? String(item.getValue()).slice(0, 20) + '...' : String(item.getValue())}
+                    </span>
+                ),
                 header: name,
                 enableResizing: true,
                 minSize: 50,
                 maxSize: 500
             }),
-        };
-    });
+        })),
+        columnHelper.accessor('Modifier', {
+            id: 'Modifier',
+            cell: ({ row }) => (
+                <div className='flex gap-2 text-[#fff] flex justify-center'>
+                    {modifierButtons.map((item, index) => (
+                        <button key={index} onClick={async (e) => {
+                            e.preventDefault();
+                            const data = await row.original;
+                            console.log(data);
+                            if (item.name === 'Edit') {
+                                setEditData(await data);
+                            }
+                            if (item.name === 'Delete') {
+                                setDeleteData(await data);
+                            }
+                            item.behavior();
+                        }} className={item.color}>{item.icon}</button>
+                    ))}
+                </div>
+            ),
+            header: () => <span>Modifier</span>,
+            footer: info => info.column.id,
+        }),
+    ];
     const table = useReactTable({
         data: dataFromSearch ? dataFromSearch : data,
         columns,
@@ -94,10 +256,55 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
         fetchData();
     }, [search]);
 
-    useEffect(()=>{console.log(dataFromSearch)},[dataFromSearch])
+    useEffect(() => { console.log(editData) }, [editData])
+
+    const onEditChange = (name, value) => {
+        setEditData((prev) => ({ ...prev, [name]: value }));
+        console.log(editData);
+    }
+
+    const onUpdateData = async (e) => {
+        e.preventDefault();
+        try {
+            const path = String(Object.keys(editData)[0]).split('_')[0] === 'type' ? 'medicine_type' : String(Object.keys(editData)[0]).split('_')[0]
+            await axios.put(`/api/${path}`, editData);
+            onSweetAlert('Update Successfully', 'Refresh the page for change', 'success');
+        } catch (error) {
+            onSweetAlert('Update Error', error.message, 'error');
+        }
+    }
 
     return (
         <div className='w-full flex flex-col items-center gap-4'>
+            <Dialog style={{ zIndex: 1 }} className='w-full' onClose={onDialogToggle} open={onDialogOpen}>
+                <DialogTitle align='center'>Update <span className='editTitle'>{String(Object.keys(editData)[0]).split('_')[0][0].toUpperCase() + String(Object.keys(editData)[0]).split('_')[0].slice(1)}</span></DialogTitle>
+                <DialogContent className='flex flex-col px-[2rem] py-[1rem] gap-[1rem] w-full' >
+                    {
+                        editData && Object.keys(editData).map((key, index) => (
+                            ['symptom', 'description', 'medicine_usage'].includes(key) ?
+                                <QuillEditor
+                                    key={index}
+                                    id={index}
+                                    className='w-full editor'
+                                    defaultValue={''}
+                                    placeholder={key}
+                                    value={editData[key]}
+                                    modules={quillModules}
+                                    formats={quillFormats}
+                                    onChange={(value) => onEditChange(key, value)}
+                                    name={key}
+                                />
+                                :
+                                <TextField onChange={(e) => onEditChange(e.target.name, e.target.value)} label={key} variant="standard" name={key} key={index} value={editData[key]} />
+                        ))
+                    }
+                </DialogContent>
+                <DialogActions style={{ fontWeight: 'bold' }}>
+                    <Button onClick={onUpdateData}>Update</Button>
+                    <Button onClick={onDialogToggle}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
             <table className="w-full" {...{
                 style: {
                     width: table.getCenterTotalSize(),

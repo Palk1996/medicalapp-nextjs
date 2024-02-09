@@ -3,37 +3,12 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { Icon } from '@iconify/react';
-import { toast } from 'react-toastify';
+
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
-import { useRouter } from 'next/navigation';
+import { onSuccessToastify, onFailureToastify } from '@/app/libs/notifications';
 
 const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
-
-const onFailureToastify = (title) => {
-    toast.error(title, {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-    });
-}
-const onSuccessToastify = (title) => {
-    toast.success(title, {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-    });
-}
 
 const UploadForm = (props) => {
     const { theme } = useTheme();
