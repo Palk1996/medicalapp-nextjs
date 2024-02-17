@@ -9,20 +9,61 @@ import registerImage from '@/app/assets/images/registerImage.png';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup'
+import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
 const LoginForm = (props) => {
   const { theme } = useTheme();
+  const router = useRouter();
   const schema = yup.object().shape({
-    username: yup.string().required('Username is required'),
-    password: yup.string().required('Password is required'),
+    username: yup
+      .string()
+      .matches(/^[a-zA-Z0-9_]+$/, 'Invalid username format (only letters, numbers, and underscores are allowed)')
+      .required('Username is required'),
+
+    password: yup
+      .string()
+      .required('Password is required')
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\w!@#$%^&*()\-_=+{};:'",<.>/?\\[\]`~|]{8,}$/,
+        'Password must have at least 8 characters, one uppercase letter, and one lowercase letter'
+      ),
   });
-  const { control, handleSubmit } = useForm({
+  const inputFields = [
+    { name: 'username', type: 'text', placeholder: 'Username' },
+    { name: 'password', type: 'password', placeholder: 'Password' },
+  ]
+  const { control, handleSubmit, setError } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data) => {
-    // Handle login logic here
-    console.log(data);
+  const onSubmit = async (data) => {
+    try {
+      console.log(data);
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const { message } = await response.json()
+        console.log(message)
+        throw new Error(message);
+      }
+      const { user } = await response.json()
+      console.log(user);
+      sessionStorage.setItem('user', JSON.stringify(user));
+      Cookies.set('user', user, { expires: 1 });
+      window.location.href = '/'
+      sessionStorage.setItem('activePage', '0');
+    } catch (error) {
+      setError('username', {
+        type: 'manual',
+        message: error.message,
+      });
+    }
   };
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className='flex flex-col space-y-3'>
@@ -31,28 +72,20 @@ const LoginForm = (props) => {
       </div>
 
       <form className='flex flex-col space-y-5' action="" onSubmit={handleSubmit(onSubmit)}>
-        <Controller
-          name="username"
-          defaultValue=""
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <input {...field} type="text" placeholder='Username' className='mt-3' />
-              {fieldState.error && <span className="text-red-500">*{fieldState.error.message}</span>}
-            </>
-          )}
-        />
-        <Controller
-          name="password"
-          defaultValue=""
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <input {...field} type="password" placeholder='Password' className='mt-3' />
-              {fieldState.error && <span className="text-red-500">*{fieldState.error.message}</span>}
-            </>
-          )}
-        />
+        {inputFields.map((fields, index) => (
+          <Controller
+            key={index}
+            name={fields.name}
+            control={control}
+            defaultValue={''}
+            render={({ field, fieldState }) => (
+              <>
+                <input className='mt-3' {...field} type={fields.name === "birth" ? "date" : fields.type} placeholder={fields.name === "birth" ? 'Birth' : fields.placeholder} />
+                {fieldState.error && <span className="text-red-500">*{fieldState.error.message}</span>}
+              </>
+            )}
+          />
+        ))}
         <div style={{ color: "#757575" }} className='flex justify-between items-center'>
           <div className='flex items-center space-x-1'>
             <input type="checkbox" name="" />
@@ -60,12 +93,13 @@ const LoginForm = (props) => {
           </div>
           <Link href="#">Forgot password?</Link>
         </div>
+
+        <div className='h-[1px] bg-slate-300'></div>
+        <div className='m-auto flex flex-col space-y-2'>
+          <button type='submit' style={{ background: theme.primaryColor }} className='text-md font-bold py-2 px-4 text-[#eeeeee] rounded-md' >SIGN IN</button>
+          <span>Not a member? <button onClick={(e) => props.formSwitcher(e)} style={{ color: theme.primaryColor }} className='font-bold' href="#">Sign Up</button></span>
+        </div>
       </form>
-      <div className='h-[1px] bg-slate-300'></div>
-      <div className='m-auto flex flex-col space-y-2'>
-        <button style={{ background: theme.primaryColor }} className='text-md font-bold py-2 px-4 text-[#eeeeee] rounded-md' >SIGN IN</button>
-        <span>Not a member? <button onClick={(e) => props.formSwitcher(e)} style={{ color: theme.primaryColor }} className='font-bold' href="#">Sign Up</button></span>
-      </div>
     </motion.div>
   );
 }

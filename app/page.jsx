@@ -1,9 +1,9 @@
 "use client"
+import { useEffect } from "react";
 import { useTheme } from "./contexts/ThemeContext";
 import Image from "next/image";
 import mainImage from "./assets/images/mainContentImage.png";
 import { Icon } from '@iconify/react';
-import Link from "next/link";
 import { motion } from "framer-motion";
 export default function Home() {
   const { theme } = useTheme();
@@ -29,6 +29,7 @@ export default function Home() {
       text: "We never received any user information."
     },
   ];
+
   return (
     <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className={`h-[65vh] flex flex-col space-y-3 m-24 items-center ${theme.backgroundColor}`}>
       <div className="w-[50%]">

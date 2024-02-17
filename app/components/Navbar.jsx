@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { Icon } from '@iconify/react';
 import { Select, SelectItem } from "@tremor/react";
 import Link from 'next/link';
+import Profile from './Profile';
 
 const ColorSelector = () => {
     const colorPalette = [
@@ -50,8 +51,9 @@ const ColorSelector = () => {
 
 function Navbar() {
     const { theme } = useTheme();
-    const [activePage, setActivePage] = useState(null);
+    const [activePage, setActivePage] = useState(0);
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [user, setUser] = useState(null);
     const navMenus = [
         {
             content: "Home",
@@ -90,15 +92,25 @@ function Navbar() {
         }
     ]
     useEffect(() => {
-        const storedActivePage = localStorage.getItem('activePage');
+        const storedActivePage = sessionStorage.getItem('activePage');
+        const getUser = JSON.parse(sessionStorage.getItem('user'));
+        if(getUser){
+            setUser(getUser)
+            console.log(user)
+        }
         if (storedActivePage) {
             setActivePage(parseInt(storedActivePage, 10));
         }
     }, []);
 
+    useEffect(()=>{
+        console.log(user);
+    },[user])
+
+
     const handleSetActivePage = (index) => {
         setActivePage(index);
-        localStorage.setItem('activePage', index.toString());
+        sessionStorage.setItem('activePage', index.toString());
     };
 
     const toggleMobileMenu = () => {
@@ -115,6 +127,10 @@ function Navbar() {
             <div className="hidden md:flex">
                 <ul className='flex space-x-5 items-center text-lg font-bold'>
                     {navMenus.map((menu, index) => (
+                        user && menu.content === 'Sign In' ? <li key={index}><Profile {...user} /></li> 
+                        : 
+                        (user?.role === 'creator' || user == null) && menu.content === 'Dashboard' ? null
+                        :
                         <li key={index}><Link onClick={menu.doActive} href={menu.path} className='hover:text-white' style={{ color: activePage === index ? theme.primaryColor : '#6c6c6c' }}>{menu.content}</Link></li>
                     ))}
                 </ul>
@@ -126,6 +142,10 @@ function Navbar() {
                 {isMobileMenuOpen && (
                     <ul className="absolute top-16 left-0 right-0 bg-white flex flex-col items-center space-y-2 p-4">
                         {navMenus.map((menu, index) => (
+                            user && menu.content === 'Sign In' ? <li key={index}><Profile  {...user} /></li> 
+                            :
+                            (user?.role === 'creator' || user == null) && menu.content === 'Dashboard' ? null
+                            :
                             <li key={index}><Link onClick={() => { toggleMobileMenu(); menu.doActive(); }} href={menu.path} className='hover:text-black'>{menu.content}</Link></li>
                         ))}
                     </ul>

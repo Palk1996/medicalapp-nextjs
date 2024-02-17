@@ -5,7 +5,9 @@ import Footer from './components/Footer'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css'
-const mitr = Mitr({ subsets: ['latin'], weight:'400' })
+
+const mitr = Mitr({ subsets: ['latin'], weight: '400' })
+
 
 export const metadata = {
   title: 'Medical App',
@@ -16,14 +18,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${mitr.className} min-h-screen flex flex-col overflow-x-hidden `}>
-        <ThemeProvider>
+          <ThemeProvider>
             <Navbar />
             <ToastContainer />
             <div className='flex-grow overflow-auto'>
               {children}
             </div>
             <Footer />
-        </ThemeProvider>
+          </ThemeProvider>
       </body>
     </html>
   )
