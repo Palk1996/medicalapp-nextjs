@@ -109,10 +109,12 @@ const RegisterForm = (props) => {
   const schema = yup.object().shape({
     firstName: yup
       .string()
+      .matches(/^[a-zA-Z]+$/, 'Invalid firstName format (only letters are allowed)')
       .required('First Name is required'),
 
     lastName: yup
       .string()
+      .matches(/^[a-zA-Z]+$/, 'Invalid lastName format (only letters are allowed)')
       .required('Last Name is required'),
 
     email: yup
@@ -149,9 +151,9 @@ const RegisterForm = (props) => {
     tel: yup
       .string()
       .length(10)
+      .matches(/^[0-9]+$/, 'Invalid telephoneNumber format (only numbers are allowed)')
       .required('Gender is required'),
   });
-
 
   const { control, handleSubmit, setError } = useForm({
     resolver: yupResolver(schema),

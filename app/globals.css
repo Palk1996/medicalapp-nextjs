@@ -121,3 +121,7 @@ th,
 .editTitle::first-letter{
     text-transform:capitalize;
 }
+.editTitle {
+    color: #00ADB5;
+    font-weight: bold;
+}

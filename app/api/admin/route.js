@@ -31,8 +31,6 @@ export async function GET(req) {
         } catch (error) {
             console.log(error.message);
             throw new Error(error.message);
-        } finally {
-            db.end();
         }
     } else {
         const adminQuery = await mysqlQueryAll("admin");

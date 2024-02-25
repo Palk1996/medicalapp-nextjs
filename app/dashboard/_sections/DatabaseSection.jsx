@@ -12,12 +12,12 @@ function DatabaseSection() {
   const databaseHeader = [
     {
       title: "Disease",
-      headers: ["disease_id", "disease_name_th", "disease_name_en", "description", "symptom", "medicine_id", "medicine_usage"],
+      headers: ["disease_id", "disease_name_th", "disease_name_en", "description", "symptom", "medicine", "medicine_usage"],
       fetchingPath: "/api/disease",
     },
     {
       title: "Medicine",
-      headers: ["medicine_id", "medicine_name", "type_id"],
+      headers: ["medicine_id", "medicine_name", "type_name"],
       fetchingPath: "/api/medicine",
     },
     {

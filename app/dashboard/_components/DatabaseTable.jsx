@@ -23,6 +23,7 @@ import {
     ColumnDef
 } from '@tanstack/react-table';
 import dynamic from 'next/dynamic';
+import { Bold } from '@tremor/react';
 const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
 
 function IndeterminateCheckbox({ indeterminate, className = '', ...rest }) {
@@ -167,8 +168,7 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
                 ),
                 header: name,
                 enableResizing: true,
-                minSize: 50,
-                maxSize: 500
+                size: 180
             }),
         })),
         columnHelper.accessor('Modifier', {
@@ -277,7 +277,7 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
     return (
         <div className='w-full flex flex-col items-center gap-4'>
             <Dialog style={{ zIndex: 1 }} className='w-full' onClose={onDialogToggle} open={onDialogOpen}>
-                <DialogTitle align='center'>Update <span className='editTitle'>{String(Object.keys(editData)[0]).split('_')[0][0].toUpperCase() + String(Object.keys(editData)[0]).split('_')[0].slice(1)}</span></DialogTitle>
+                <DialogTitle><span className='editTitle'>{String(Object.keys(editData)[0]).split('_')[0][0].toUpperCase() + String(Object.keys(editData)[0]).split('_')[0].slice(1)}</span></DialogTitle>
                 <DialogContent className='flex flex-col px-[2rem] py-[1rem] gap-[1rem] w-full' >
                     {
                         editData && Object.keys(editData).map((key, index) => (
@@ -396,7 +396,7 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
                     )}
                     {!loading && table.getRowModel().rows.length === 0 &&
                         <tr className="text-center h-32">
-                            <td colSpan={12}>No Recoard Found!</td>
+                            <td colSpan={12}>No Record Found!</td>
                         </tr>
                     }
                 </tbody>

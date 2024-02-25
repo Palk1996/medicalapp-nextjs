@@ -11,23 +11,22 @@ const db = await mysql.createConnection({
 });
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const param = searchParams.get("search");
-  if (param) {
-    try {
-      const queryString = `SELECT * FROM disease WHERE disease_id LIKE ? OR disease_name_th LIKE ? OR disease_name_en LIKE ?`;
+  try {
+    const { searchParams } = new URL(req.url);
+    const param = searchParams.get("search");
+    let result;
+    if (param) {
+      const queryString = `SELECT disease_id, disease_name_th, disease_name_en, description, symptom, ifNULL(medicine_name, 'ปัจจุบันยังไม่มียารักษา') as medicine, medicine_usage FROM disease LEFT OUTER JOIN medicine ON disease.medicine_id = medicine.medicine_id WHERE disease_id LIKE ? OR disease_name_th LIKE ? OR disease_name_en LIKE ?`;
       const values = [`%${param}%`, `%${param}%`, `%${param}%`];
-      const [result] = await db.execute(queryString, values);
-      return NextResponse.json(result);
-    } catch (error) {
-      console.log(error.message);
-      throw new Error(error.message);
-    } finally {
-      db.end();
+      [result] = await db.execute(queryString, values);
+    } else {
+      const queryString = `SELECT disease_id, disease_name_th, disease_name_en, description, symptom, ifNULL(medicine_name, 'ปัจจุบันยังไม่มียารักษา') as medicine, medicine_usage FROM disease LEFT OUTER JOIN medicine ON disease.medicine_id = medicine.medicine_id`;
+      [result] = await db.execute(queryString, []);
     }
-  } else {
-    const diseaseQuery = await mysqlQueryAll("disease");
-    return NextResponse.json(diseaseQuery);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.log(error.message);
+    throw new Error(error.message);
   }
 }
 

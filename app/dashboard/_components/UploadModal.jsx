@@ -1,8 +1,9 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { Icon } from '@iconify/react';
+import axios from 'axios';
 
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
@@ -14,6 +15,15 @@ const UploadForm = (props) => {
     const { theme } = useTheme();
     const [formValues, setFormValues] = useState({});
     const [isClearing, setIsClearing] = useState(false);
+    const [dropDownItem, setDropDownItem] = useState([])
+
+    const getItems = async () => {
+        const result = await axios.get('/api/medicine/')
+    }
+
+    useEffect(() => {
+        
+    })
     const quillModules = {
         toolbar: [
             [{ header: [1, 2, 3, false] }],
@@ -113,7 +123,12 @@ const UploadForm = (props) => {
         <form className='flex flex-col space-y-2'>
             {props.formObj.map((item, index) => (
                 <div className='flex w-full' key={index}>
-                    {['description', 'symptom', 'medicine_usage'].includes(item.name) ? (
+                    {['medicine_id'].includes(item.name) ? (
+                        <select>
+                            <option value="">kl</option>
+                        </select>
+                    ) : 
+                    ['description', 'symptom', 'medicine_usage'].includes(item.name) ? (
                         <QuillEditor
                             id={index}
                             className='h-[6.5rem] w-full mb-11 editor'
@@ -123,7 +138,6 @@ const UploadForm = (props) => {
                             placeholder={item.placeholder}
                             modules={quillModules}
                             formats={quillFormats}
-
                         />
                     ) : (
                         <input
