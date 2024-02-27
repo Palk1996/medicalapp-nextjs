@@ -10,7 +10,7 @@ export const mysqlQueryAll = async (tableName) => {
     });
 
     try {
-        const queryString = `SELECT * FROM ${tableName}`;
+        const queryString = `SELECT * FROM ${tableName} `;
         const value = []
         const [result] = await db.execute(queryString, value);
         return result;

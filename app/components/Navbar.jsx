@@ -81,11 +81,6 @@ function Navbar() {
             doActive: () => handleSetActivePage(4)
         },
         {
-            content: <div className='flex items-center'><Icon className='text-xl' icon="mdi:code" />API</div>,
-            path: "/api",
-            doActive: () => handleSetActivePage(5)
-        },
-        {
             content: "Sign In",
             path: "/signin",
             doActive: () => handleSetActivePage(6)

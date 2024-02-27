@@ -11,6 +11,8 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
+import Swal from 'sweetalert2'
+
 
 const LoginForm = (props) => {
   const { theme } = useTheme();
@@ -63,6 +65,7 @@ const LoginForm = (props) => {
         type: 'manual',
         message: error.message,
       });
+      Swal.fire('Sign In Failed', error.message, 'error')
     }
   };
   return (
@@ -184,12 +187,17 @@ const RegisterForm = (props) => {
       if (!response.ok) {
         throw new Error('Registration failed. Please try again.');
       }
-      console.log('Registration successful!');
+      const message = await response.json()
+      if(message.error){
+        throw new Error(message.error.message);
+      }
+      Swal.fire('Registration successful!', 'Please wait until owner accept your registration request.', 'success')
     } catch (error) {
       setError('username', {
         type: 'manual',
         message: error.message,
       });
+      Swal.fire('Registration Failed', error.message, 'error')
     }
   };
   return (

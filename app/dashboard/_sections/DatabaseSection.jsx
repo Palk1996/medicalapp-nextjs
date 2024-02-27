@@ -17,7 +17,7 @@ function DatabaseSection() {
     },
     {
       title: "Medicine",
-      headers: ["medicine_id", "medicine_name", "type_name"],
+      headers: ["medicine_id", "medicine_name", "type"],
       fetchingPath: "/api/medicine",
     },
     {

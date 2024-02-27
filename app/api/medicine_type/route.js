@@ -25,8 +25,10 @@ export async function GET(req) {
       throw new Error(error.message);
     }
   } else {
-    const medicineTypeQuery = await mysqlQueryAll("medicine_type");
-    return NextResponse.json(medicineTypeQuery);
+    const queryString = `SELECT * FROM medicine_type ORDER BY type_id ASC `;
+    const value = []
+    const [result] = await db.execute(queryString, value);
+    return NextResponse.json(result);
   }
 }
 
@@ -34,7 +36,7 @@ export async function PUT(req, res) {
   try {
     const data = await req.json();
     console.log(data);
-    const queryString = `UPDATE medicine_type SET type_name = ? WHERE type_id = ?`;
+    const queryString = `UPDATE medicine_type SET type_name = ? WHERE type_id = ? `;
     const values = [data.type_name, data.type_id];
     await db.execute(queryString, values);
     return NextResponse.json({ message: 'ok' });

@@ -23,27 +23,11 @@ import {
     ColumnDef
 } from '@tanstack/react-table';
 import dynamic from 'next/dynamic';
-import { Bold } from '@tremor/react';
 const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
-
-function IndeterminateCheckbox({ indeterminate, className = '', ...rest }) {
-    const ref = React.useRef(null);
-
-    React.useEffect(() => {
-        if (typeof indeterminate === 'boolean') {
-            ref.current.indeterminate = !rest.checked && indeterminate;
-        }
-    }, [ref, indeterminate]);
-
-    return (
-        <input
-            type="checkbox"
-            ref={ref}
-            className={className + ' cursor-pointer h-5 w-5 accent-PrimaryColors'}
-            {...rest}
-        />
-    );
-}
+import {
+    Select,
+    SelectItem,
+} from '@tremor/react';
 
 function DatabaseTable({ title, headers, fetchingPath, search }) {
     const [loading, setLoading] = useState(true);
@@ -86,6 +70,27 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
         'color',
         'code-block',
     ];
+    const [medicineDropDownItem, setMedicineDropDownItem] = useState([])
+    const [typeDropDownItem, setTypeDropDownItem] = useState([])
+
+    const getMedicineItems = async () => {
+        const response = await axios.get('/api/medicine/', {})
+        console.log(response.data)
+        setMedicineDropDownItem(response.data)
+    }
+
+    const getTypeItems = async () => {
+        const response = await axios.get('/api/medicine_type/')
+        console.log(response.data)
+        setTypeDropDownItem(response.data)
+    }
+
+    useEffect(() => {
+        getMedicineItems()
+        getTypeItems()
+
+
+    }, [])
     const onDialogToggle = () => {
         setOnDialogOpen(!onDialogOpen);
         console.log(onDialogOpen);
@@ -94,10 +99,16 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
     const onDataDelete = async (path, id) => {
         try {
             console.log(id)
-            if (id) await axios.delete(`/api/${path}?id=${id}`);
+            if (id) {
+                const response = await axios.delete(`/api/${path}?id=${id}`);
+                if(response.data.error){
+                    throw new Error(response.data.error)
+                }
+                Swal.fire("Deleted!", "", "success");
+            }
             else throw new Error('params is undefined');
         } catch (error) {
-            onSweetAlert('Update Error', error.message, 'error');
+            onSweetAlert('Delete', error.message, 'error');
         }
     }
 
@@ -106,7 +117,7 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
     }, [deleteData])
 
     const onDataDeleteAlert = async () => {
-        if ( isNaN(deleteData)) {
+        if (isNaN(deleteData)) {
             const path = String(Object.keys(deleteData)[0]).split('_')[0] === 'type' ? 'medicine_type' : String(Object.keys(deleteData)[0]).split('_')[0]
             const id = await deleteData[Object.keys(deleteData)[0]];
             console.log(id);
@@ -117,7 +128,6 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
                 confirmButtonColor: "#c60f31",
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    Swal.fire("Saved!", "", "success");
                     await onDataDelete(path, id);
                 }
             });
@@ -135,30 +145,6 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
         },
     ];
     const columns = [
-        {
-            id: 'select',
-            header: ({ table }) => (
-                <IndeterminateCheckbox
-                    {...{
-                        checked: table.getIsAllRowsSelected(),
-                        indeterminate: table.getIsSomeRowsSelected(),
-                        onChange: table.getToggleAllRowsSelectedHandler(),
-                    }}
-                />
-            ),
-            cell: ({ row }) => (
-                <div className="px-1 text-center">
-                    <IndeterminateCheckbox
-                        {...{
-                            checked: row.getIsSelected(),
-                            disabled: !row.getCanSelect(),
-                            indeterminate: row.getIsSomeSelected(),
-                            onChange: row.getToggleSelectedHandler(),
-                        }}
-                    />
-                </div>
-            ),
-        },
         ...headers.map((name, index) => ({
             ...columnHelper.accessor(name, {
                 cell: (item) => (
@@ -295,7 +281,34 @@ function DatabaseTable({ title, headers, fetchingPath, search }) {
                                     name={key}
                                 />
                                 :
-                                <TextField onChange={(e) => onEditChange(e.target.name, e.target.value)} label={key} variant="standard" name={key} key={index} value={editData[key]} />
+                                ['medicine', 'type'].includes(key) ? (
+                                    <Select placeholder={`Select ${String(key) + ' name'}`} value={editData[key + '_id']} onValueChange={(value) => {
+                                        onEditChange(key + '_id', value)
+                                        delete editData.medicine
+                                        delete editData.type
+                                    }}>
+                                        {
+                                            key === 'medicine' && medicineDropDownItem ? medicineDropDownItem.map((itemChild, indexChild) => (
+                                                <SelectItem
+                                                    name={String(key + '_id')} key={indexChild}
+                                                    value={itemChild.medicine_id}
+                                                >
+                                                    {itemChild.medicine_name}
+                                                </SelectItem>
+                                            ))
+                                                :
+                                                typeDropDownItem && typeDropDownItem.map((itemChild, indexChild) => (
+                                                    <SelectItem
+                                                        name={String(key + '_id')} key={indexChild}
+                                                        value={itemChild.type_id}
+                                                    >
+                                                        {itemChild.type_name}
+                                                    </SelectItem>
+                                                ))
+                                        }
+                                    </Select>
+                                ) :
+                                    <TextField disabled={String(key).split('_')[1] === 'id'} onChange={(e) => onEditChange(e.target.name, e.target.value)} label={key} variant="standard" name={key} key={index} value={editData[key]} />
                         ))
                     }
                 </DialogContent>

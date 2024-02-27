@@ -20,7 +20,7 @@ export async function GET(req) {
       const values = [`%${param}%`, `%${param}%`];
       [result] = await db.execute(queryString, values);
     } else {
-      const queryString = `SELECT medicine_id, medicine_name, type_name FROM medicine LEFT JOIN medicine_type ON medicine.type_id = medicine_type.type_id`;
+      const queryString = `SELECT medicine_id, medicine_name, type_name as type FROM medicine LEFT JOIN medicine_type ON medicine.type_id = medicine_type.type_id`;
       [result] = await db.execute(queryString, []);
     }
     return NextResponse.json(result);
